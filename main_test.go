@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"testing"
@@ -45,4 +46,16 @@ func handleRequest(conn net.Conn) {
 	conn.Write([]byte("Message received."))
 	// Close the connection when you're done with it.
 	conn.Close()
+}
+
+func receiver(reader io.Reader) {
+	fmt.Println("Receiving")
+	inputReceived, _ := receiveUserInput(reader)
+	fmt.Println("Received: " + inputReceived)
+}
+func TestReceiveUserInput(t *testing.T) {
+	reader, writer := io.Pipe()
+	go receiver(reader)
+	writer.Write([]byte("WOW LE TEST\n"))
+	time.Sleep(2 * time.Second)
 }

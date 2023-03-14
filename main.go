@@ -7,6 +7,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"os/signal"
 	"strings"
 )
 
@@ -36,6 +37,32 @@ func connectToSocket(address string) (net.Conn, error) {
 
 func main() {
 	fmt.Println("heelow world")
-	userInput, _ := receiveUserInput(os.Stdin)
-	fmt.Println("User inputed:" + userInput)
+
+	sigs := make(chan os.Signal, 1)
+	done := make(chan bool, 1)
+	signal.Notify(sigs, os.Interrupt)
+	go func() {
+		sig := <-sigs
+		fmt.Println("Recieved signal:")
+		fmt.Println(sig)
+		done <- true
+		os.Exit(0)
+		return
+	}()
+
+	for {
+		userInput, _ := receiveUserInput(os.Stdin)
+		fi, _ := os.Create("test.txt")
+		fmt.Println("User inputed:" + userInput)
+		fi.Write([]byte(userInput))
+		fi.Close()
+		//Check if signal was recieved
+		select {
+		case <-done:
+			fmt.Println("exiting")
+			return
+		default:
+		}
+	}
+
 }
